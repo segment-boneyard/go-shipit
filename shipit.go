@@ -13,15 +13,23 @@ package shipit
 
 import . "github.com/segmentio/go-dup"
 import "bufio"
+import "fmt"
+import "os"
 import "io"
 
 // To ships stdio to the given writer.
 func To(w io.Writer) (err error) {
-	if err = ship(1, "stdout", w); err != nil {
+	stderr, err := os.Open("/dev/stderr")
+
+	if err != nil {
 		return
 	}
 
-	if err = ship(2, "stderr", w); err != nil {
+	if err = ship(1, "stdout", w, stderr); err != nil {
+		return
+	}
+
+	if err = ship(2, "stderr", w, stderr); err != nil {
 		return
 	}
 
@@ -30,7 +38,7 @@ func To(w io.Writer) (err error) {
 
 // dup `fd` and read from the pipe to send log lines
 // to loggly, then write back to the original stream.
-func ship(fd int, name string, log io.Writer) error {
+func ship(fd int, name string, log io.Writer, stderr *os.File) error {
 	r, w, err := Dup(fd, name)
 
 	if err != nil {
@@ -48,19 +56,22 @@ func ship(fd int, name string, log io.Writer) error {
 			}
 
 			if err != nil {
-				panic(err)
+				fmt.Fprintf(stderr, "ERROR: shipit failed to read from %s: %s", name, err)
+				break
 			}
 
 			_, err = log.Write(line)
 
 			if err != nil {
-				panic(err)
+				fmt.Fprintf(stderr, "ERROR: shipit failed to write to writer: %s", err)
+				break
 			}
 
 			_, err = w.Write(line)
 
 			if err != nil {
-				panic(err)
+				fmt.Fprintf(stderr, "ERROR: shipit failed to write to %s: %s", name, err)
+				break
 			}
 		}
 	}()
