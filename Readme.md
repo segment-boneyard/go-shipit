@@ -9,6 +9,8 @@
 
 ## Example
 
+  With the following example you'll see "testing {stdout,stderr}" in the terminal as well as loggly.
+
 ```go
 shipit.To(loggly.New("your-token-here"))
 
@@ -18,6 +20,8 @@ for {
   fmt.Fprintf(os.Stderr, "testing stderr\n")
 }
 ```
+
+  March on Chewbacca.
 
 # License
 
