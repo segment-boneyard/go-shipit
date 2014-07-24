@@ -51,19 +51,19 @@ func ship(fd int, name string, log io.Writer, stderr *os.File) error {
 		for {
 			line, err := buf.ReadBytes('\n')
 
+			_, err = log.Write(line)
+
+			if err != nil {
+				fmt.Fprintf(stderr, "ERROR: shipit failed to write to writer: %s", err)
+				break
+			}
+
 			if err == io.EOF {
 				break
 			}
 
 			if err != nil {
 				fmt.Fprintf(stderr, "ERROR: shipit failed to read from %s: %s", name, err)
-				break
-			}
-
-			_, err = log.Write(line)
-
-			if err != nil {
-				fmt.Fprintf(stderr, "ERROR: shipit failed to write to writer: %s", err)
 				break
 			}
 
